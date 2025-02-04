@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #f7f7f7;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            width: 80%;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 80%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .loading {
+            display: none;
+            font-size: 18px;
+            color: #888;
+        }
+        .error {
+            color: red;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>YouTube Video Downloader</h2>
+    <input type="text" id="youtubeUrl" placeholder="Enter YouTube URL" />
+    <button onclick="fetchFormats()">Get Formats</button>
+
+    <div class="loading" id="loading">Loading formats...</div>
+    <div class="error" id="errorMessage"></div>
+
+    <table id="results">
+        <thead>
+            <tr>
+                <th>Format ID</th>
+                <th>Type</th>
+                <th>Resolution</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        async function fetchFormats() {
+            const url = document.getElementById("youtubeUrl").value;
+            const loading = document.getElementById("loading");
+            const errorMessage = document.getElementById("errorMessage");
+            const tableBody = document.querySelector("#results tbody");
+
+            if (!url) {
+                alert("Please enter a valid YouTube URL.");
+                return;
+            }
+
+            errorMessage.innerHTML = "";
+            tableBody.innerHTML = "";
+            loading.style.display = "block";  // Show loading message
+
+            try {
+                const response = await fetch("http://localhost:5000/get_formats", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url }),
+                });
+
+                const data = await response.json();
+
+                if (data.formats) {
+                    data.formats.forEach(f => {
+                        const row = `<tr>
+                            <td>${f.format_id}</td>
+                            <td>${f.ext}</td>
+                            <td>${f.resolution}</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                } else {
+                    errorMessage.innerHTML = data.error || "Failed to fetch formats.";
+                }
+            } catch (error) {
+                errorMessage.innerHTML = "An error occurred. Please try again.";
+            } finally {
+                loading.style.display = "none";  // Hide loading message
+            }
+        }
+    </script>
+</body>
+</html>
